@@ -5,7 +5,19 @@ import {uploadOnCloudinary} from '../utils/cloudinary.js'
 import {ResponceApi} from '../utils/responceApi.js'
 
 
-
+const generateAcessAndRefreshToken = async(userId)=>{
+     try {
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+        user.refreshToken= refreshToken;
+        await user.save({validateBeforeSave:false});
+        return {accessToken,refreshToken};
+     } catch (error) {
+        throw new ApiError(500,"Something went wrong while generating access and refresh token")
+     }
+}
+const registerUser = asyncHandler(async(req,res)=>{
     // step1-> get user detials
     // step2-> handling files ( avatar and coverImage) in router
     // step3-> check if any field is empty(only text not file right now
@@ -16,7 +28,7 @@ import {ResponceApi} from '../utils/responceApi.js'
    //  step8-> return responce by responceApi file imported from util
 
 
-const registerUser = asyncHandler(async(req,res)=>{
+
     //get user detials (only json and form related data can be obtained with body)
     const {fullname,email,username,password}= req.body;                           //step1
         if( [fullname,email,username,password].some((field)=>(
@@ -62,4 +74,60 @@ const registerUser = asyncHandler(async(req,res)=>{
         )
     })
 
-export {registerUser}
+const loginUser = asyncHandler(async (req,res)=>{
+    // get inforamtion from req.body
+    // username or email exsist or not and check if user exsist or not
+    // password check
+    // generate access and refresh token
+    // send in cookie format
+ 
+  
+    const {email,username,password} = req.body;
+    if(!(username ||email)){
+        throw new ApiError(400,"Username or email is required");
+    }
+    const user = await User.findOne({
+        $or: [{username},{email}]
+    })
+    if(!user){
+        throw new ApiError(404,"invalid username or email");
+    }
+    const passwordVerification = await user.isPasswordCorrect(password)
+    if(!passwordVerification){
+        throw new ApiError(401,"Invalid user password");
+    }
+    const {accessToken,refreshToken} = await generateAcessAndRefreshToken(user._id);
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+    const option = {
+        httpOnly: true,
+        secure: true,
+    }
+    return res.status(200)
+              .cookie("accessToken",accessToken,option)
+              .cookie("refreshToken",refreshToken,option)
+              .json(
+                 new ResponceApi(200,{user:loggedInUser,accessToken,refreshToken},"user logged successfully")
+              )
+})
+const logOutUser = asyncHandler(async (req,res)=>{
+      await User.findByIdAndUpdate(req.user._id,
+        {$set:{
+            refreshToken:undefined
+             }
+        },
+        {
+            new:true,
+        }
+        )
+        const option={
+            httpOnly:true,
+            secure:true,
+        }
+        return res.status(200)
+                  .clearCookie("accessToken",option)
+                  .clearCookie("refreshToken",option)
+                  .json(
+                    new ResponceApi(200,{},"User logged out")
+                  )
+})
+export {registerUser,loginUser,logOutUser}
