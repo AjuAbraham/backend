@@ -1,7 +1,7 @@
 import {asyncHandler} from '../utils/asyncHandler.js'
 import {ApiError} from '../utils/apiError.js'
 import {User} from '../models/user.model.js'
-import {uploadOnCloudinary} from '../utils/cloudinary.js'
+import {deleteImage, uploadOnCloudinary} from '../utils/cloudinary.js'
 import {ResponceApi} from '../utils/responceApi.js'
 import  Jwt  from 'jsonwebtoken'
 
@@ -213,7 +213,6 @@ const updateAccountDetial = asyncHandler(async(req,res)=>{
 
 const updateUserAvatar = asyncHandler(async(req,res)=>{
     const updatedAvatar = req.file?.path;
-    console.log(updatedAvatar);
     if(!updatedAvatar){
         throw new ApiError(400,"Avatar is required to update");
     }
@@ -221,6 +220,12 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
     if(!newAvatar){
         throw new ApiError(400,"Some issue while uploading avatar on cloudinary");
     }
+
+    const prevUser = await User.findById(req.user?._id);
+        const imgRemove = await deleteImage(prevUser.avatar);
+        if(!imgRemove){
+            throw new ApiError(400,"some issue occured while removing image");
+        }
     const user = await User.findByIdAndUpdate(req.user?._id,
         {
             $set:{avatar:newAvatar.url}
@@ -241,9 +246,15 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
     if(!updatedCoverImage){
         throw new ApiError(400,"CoverImage is required to update");
     }
+
     const newCoverImage = await uploadOnCloudinary(updatedCoverImage);
     if(!newCoverImage){
         throw new ApiError(400,"Some issue while uploading cover image on cloudinary");
+    }
+    const prevUser = await User.findById(req.user?._id);
+    const imgRemove = await deleteImage(prevUser.coverImage);
+    if(!imgRemove){
+        throw new ApiError(400,"some issue occured while removing image");
     }
     const user = await User.findByIdAndUpdate(req.user?._id,
         {
