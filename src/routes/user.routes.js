@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser,loginUser,logOutUser, refreshAcessToken } from "../controllers/user.controller.js";
+import { registerUser,loginUser,logOutUser, refreshAcessToken, changePassword, currentUser, updateAccountDetial, updateUserAvatar, updateUserCoverImage } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 const userRoutes = Router();
@@ -21,4 +21,9 @@ userRoutes.route('/login').post(loginUser)
 // secure route
 userRoutes.route('/logout').post(verifyJwt,logOutUser)  
 userRoutes.route('/refresh-token').post(refreshAcessToken)
+userRoutes.route('/change-password').post(verifyJwt,changePassword)
+userRoutes.route('/current-user').get(verifyJwt,currentUser)
+userRoutes.route('/update-account-detail').post(verifyJwt,updateAccountDetial)
+userRoutes.route('/update-avatar').post(verifyJwt,upload.single('avatar'),updateUserAvatar)
+userRoutes.route('/update-coverImage').post(verifyJwt,upload.single('coverImage'),updateUserCoverImage)
 export default userRoutes;

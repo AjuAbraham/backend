@@ -50,7 +50,7 @@ const registerUser = asyncHandler(async(req,res)=>{
         
         const avatar=  await uploadOnCloudinary(avatarLocalPath);
         const coverImage= await uploadOnCloudinary(coverImageLocalPath);           //step5
-        console.log(coverImage)
+        console.log(avatar)
         if(!avatar.url){
             throw new ApiError(400,"User's avatar is required ")
         }
@@ -193,12 +193,12 @@ const currentUser = asyncHandler(async(req,res)=>{
 
 const updateAccountDetial = asyncHandler(async(req,res)=>{
     const {fullname,email} = req.body;
-    if(!fullname || !email){
+    if(!(fullname || email)){
         throw new ApiError(400,"fullname or email is required to update the details");
     }
-    const user = User.findByIdAndUpdate(req.user?._id,
+    const user = await User.findByIdAndUpdate(req.user?._id,
         {
-        $set:{fullname,email}
+        $set:{fullname:fullname,email:email}
         },
         {new:true}
     ).select("-password -refreshToken")
@@ -213,11 +213,12 @@ const updateAccountDetial = asyncHandler(async(req,res)=>{
 
 const updateUserAvatar = asyncHandler(async(req,res)=>{
     const updatedAvatar = req.file?.path;
+    console.log(updatedAvatar);
     if(!updatedAvatar){
         throw new ApiError(400,"Avatar is required to update");
     }
     const newAvatar = await uploadOnCloudinary(updatedAvatar);
-    if(!newAvatar.url){
+    if(!newAvatar){
         throw new ApiError(400,"Some issue while uploading avatar on cloudinary");
     }
     const user = await User.findByIdAndUpdate(req.user?._id,
@@ -241,7 +242,7 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"CoverImage is required to update");
     }
     const newCoverImage = await uploadOnCloudinary(updatedCoverImage);
-    if(!newCoverImage.url){
+    if(!newCoverImage){
         throw new ApiError(400,"Some issue while uploading cover image on cloudinary");
     }
     const user = await User.findByIdAndUpdate(req.user?._id,
@@ -255,6 +256,10 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
         new ResponceApi(200,user,"Cover Image updated successfully")
        )
 })
+
+
+
+
 export {registerUser,
     loginUser,
     logOutUser,
