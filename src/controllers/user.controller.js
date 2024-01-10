@@ -17,6 +17,8 @@ const generateAcessAndRefreshToken = async(userId)=>{
         throw new ApiError(500,"Something went wrong while generating access and refresh token")
      }
 }
+
+
 const registerUser = asyncHandler(async(req,res)=>{
     // step1-> get user detials
     // step2-> handling files ( avatar and coverImage) in router
@@ -268,7 +270,73 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
        )
 })
 
+const getUserChannelProfile = asyncHandler(async(req,res)=>{
+    const {username} = req.params;
+    if(!username?.trim()){
+        throw new ApiError(400,"Some error while getting user channel")
+    } 
+    const channel = await User.aggregate([
+        {
+            $match:{
+                username: username
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",                           //subscriber info
+                foreignField:"channel",
+                as:"subscribers"
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",                           //subscribed To info
+                foreignField:"subscriber",
+                as:"subscribedTo"
+            }
+        },
+        {
+            $addFields:{
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                channelSubscribedToCount:{
+                    $sum: "$subscribedTo"
+                },
+                isSubscribed:{
+                    $cond:{
+                        if:{$in:[req.user?._id,"$subscribers.subscriber"]},
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                fullname:1,
+                email:1,
+                username:1,
+                avatar:1,
+                coverImage:1,
+                subscribersCount:1,
+                channelSubscribedToCount:1,
+                isSubscribed:1,
+            }
+        }
 
+    ])
+    if(!channel?.length){
+        throw new ApiError(400,"Some issue while fetching channel ie channel does'nt exist")
+    }
+    console.log("channel returns : ",channel);
+    res.status(200)
+       .json(
+        new ResponceApi(200,channel[0],"Channel fetched successfully")
+       )
+})
 
 
 export {registerUser,
@@ -280,4 +348,5 @@ export {registerUser,
     updateAccountDetial,
     updateUserAvatar,
     updateUserCoverImage,
+    getUserChannelProfile
 }
