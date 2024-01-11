@@ -1,5 +1,6 @@
 import {asyncHandler} from '../utils/asyncHandler.js'
 import {ApiError} from '../utils/apiError.js'
+import mongoose from 'mongoose'
 import {User} from '../models/user.model.js'
 import {deleteImage, uploadOnCloudinary} from '../utils/cloudinary.js'
 import {ResponceApi} from '../utils/responceApi.js'
@@ -303,7 +304,7 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
                     $size:"$subscribers"
                 },
                 channelSubscribedToCount:{
-                    $sum: "$subscribedTo"
+                    $size: "$subscribedTo"
                 },
                 isSubscribed:{
                     $cond:{
@@ -328,6 +329,7 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
         }
 
     ])
+    console.log("channel is: ",channel)
     if(!channel?.length){
         throw new ApiError(400,"Some issue while fetching channel ie channel does'nt exist")
     }
@@ -381,7 +383,6 @@ const getUserWatchHistroy = asyncHandler(async (req,res)=>{
             },
         }
       ])
-
       res.status(200)
          .json(new ResponceApi(200,user[0].watchHistory,"Watch History fetched  successfully"))
 })
