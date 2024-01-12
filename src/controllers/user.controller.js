@@ -2,7 +2,7 @@ import {asyncHandler} from '../utils/asyncHandler.js'
 import {ApiError} from '../utils/apiError.js'
 import mongoose from 'mongoose'
 import {User} from '../models/user.model.js'
-import {deleteImage, uploadOnCloudinary} from '../utils/cloudinary.js'
+import {deleteFile, uploadOnCloudinary} from '../utils/cloudinary.js'
 import {ResponceApi} from '../utils/responceApi.js'
 import  Jwt  from 'jsonwebtoken'
 
@@ -53,7 +53,6 @@ const registerUser = asyncHandler(async(req,res)=>{
         
         const avatar=  await uploadOnCloudinary(avatarLocalPath);
         const coverImage= await uploadOnCloudinary(coverImageLocalPath);           //step5
-        console.log(avatar)
         if(!avatar.url){
             throw new ApiError(400,"User's avatar is required ")
         }
@@ -225,7 +224,7 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
     }
 
     const prevUser = await User.findById(req.user?._id);
-        const imgRemove = await deleteImage(prevUser.avatar);
+        const imgRemove = await deleteFile(prevUser.avatar,"image");
         if(!imgRemove){
             throw new ApiError(400,"some issue occured while removing image");
         }
@@ -255,7 +254,7 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Some issue while uploading cover image on cloudinary");
     }
     const prevUser = await User.findById(req.user?._id);
-    const imgRemove = await deleteImage(prevUser.coverImage);
+    const imgRemove = await deleteFile(prevUser.coverImage,"image");
     if(!imgRemove){
         throw new ApiError(400,"some issue occured while removing image");
     }
