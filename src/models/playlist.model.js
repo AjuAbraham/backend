@@ -18,7 +18,7 @@ const playlistSchema = new mongoose.Schema({
            required:[true,"Playlist description is required"]
       },
       owner:{
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref:"User"
       }
 },{timestamps:true})
