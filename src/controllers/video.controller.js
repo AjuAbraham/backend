@@ -148,7 +148,6 @@ const togglePublishStatus = asyncHandler(async (req,res)=>{
         throw new ApiError(400,"Error while fetching video")
      }
      video.isPublished ? video.isPublished=false : video.isPublished=true;
-     console.log(video.isPublished);
      await video.save({validateBeforeSave:false});
     res.status(200).json(new ResponceApi(200,"The isPublished is toggled"));
 })
