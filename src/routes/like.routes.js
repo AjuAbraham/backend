@@ -5,3 +5,6 @@ import { toggleVideoLike } from "../controllers/like.controller.js";
 const likeRoutes = Router();
 likeRoutes.use(verifyJwt)
 likeRoutes.route('/toggle-videolike/:videoId').post(toggleVideoLike);
+
+
+export default likeRoutes;

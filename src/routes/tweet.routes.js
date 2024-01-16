@@ -7,7 +7,7 @@ const tweetRouter = Router();
 tweetRouter.use(verifyJwt);
 
 tweetRouter.route('/create-tweet').post(createTweet);
-tweetRouter.route('/get-tweet').get(getUserTweet);
+tweetRouter.route('/get-tweet/:userId').get(getUserTweet);
 tweetRouter.route('/update-tweet/:tweetId').patch(updateTweet);
 tweetRouter.route('/delete-tweet/:tweetId').delete(deleteTweet);
 export default tweetRouter;
