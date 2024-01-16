@@ -1,4 +1,4 @@
-import { isValidObjectId } from 'mongoose';
+import mongoose, { isValidObjectId, mongo } from 'mongoose';
 import {Like} from '../models/like.model.js';
 import {ApiError} from '../utils/apiError.js';
 import {asyncHandler} from '../utils/asyncHandler.js';
@@ -91,7 +91,70 @@ const toggleTweetLike = asyncHandler(async(req,res)=>{
 
 const getLikedVideos = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
-    const likedVideos = await Like.find({likedBy: userId})
+    if(!userId){
+        throw new ApiError(400,"Invalid User ")
+    }
+    const likedVideos = await Like.aggregate([
+        {
+            $match:{
+                likedBy: new mongoose.Types.ObjectId(userId)
+            }
+        },
+        {
+            $lookup:{
+                from:"videos",
+                localField:"video",
+                foreignField:"_id",
+                as:"video",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        username:1,
+                                        avatar:1,
+                                        fullname:1,
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $first:"$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $project:{
+                videoFile:1,
+                owner:1,
+                thumbnail:1,
+                title:1,
+                description:1,
+                duration:1,
+                views:1,
+                createdAt:1
+            }
+        },
+    ])
+    console.log("liked videos is: ",likedVideos)
+    if(!likedVideos.length){
+        throw new ApiError(400,"Can't get user's liked videos")
+    }
+    if(likedVideos.length==0){
+        res.status(200).json(new ResponceApi(200,"User don't have any liked videos"))
+    }
+    res.status(200).json(new ResponceApi(200,likedVideos,"User liked videos fetched successfully"))
 })
 
-export {toggleVideoLike,toggleCommentLike,toggleTweetLike}
+export {toggleVideoLike,toggleCommentLike,toggleTweetLike,getLikedVideos}
