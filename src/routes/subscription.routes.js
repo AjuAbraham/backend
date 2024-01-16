@@ -7,7 +7,7 @@ const subscriptionRoutes = Router();
 
 subscriptionRoutes.use(verifyJwt)
 
-subscriptionRoutes.route('/channel-subscriber/:channelId').get(getUserChannelSubscribers)
-subscriptionRoutes.route('/subscribed-channels/:channelId').get(getSubscribedChannels)
-subscriptionRoutes.route('/toogle-subscription/:channelId').get(toggleSubscription)
+subscriptionRoutes.route('/channel-subscriber/:channelId').get(getUserChannelSubscribers)   
+subscriptionRoutes.route('/subscribed-channels/:subscriberId').get(getSubscribedChannels)
+subscriptionRoutes.route('/toggle-subscription/:channelId').post(toggleSubscription)
 export default subscriptionRoutes;

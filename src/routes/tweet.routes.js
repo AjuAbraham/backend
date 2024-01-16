@@ -9,5 +9,5 @@ tweetRouter.use(verifyJwt);
 tweetRouter.route('/create-tweet').post(createTweet);
 tweetRouter.route('/get-tweet').get(getUserTweet);
 tweetRouter.route('/update-tweet/:tweetId').patch(updateTweet);
-tweetRouter.route('/delete-tweet/:tweetId').get(deleteTweet);
+tweetRouter.route('/delete-tweet/:tweetId').delete(deleteTweet);
 export default tweetRouter;

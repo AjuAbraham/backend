@@ -3,7 +3,7 @@ import {ApiError} from '../utils/apiError.js'
 import {ResponceApi} from '../utils/responceApi.js'
 import {asyncHandler} from '../utils/asyncHandler.js'
 import { User } from "../models/user.model.js";
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 
 
 const toggleSubscription = asyncHandler(async(req,res)=>{
@@ -35,26 +35,21 @@ const toggleSubscription = asyncHandler(async(req,res)=>{
 
 const getUserChannelSubscribers = asyncHandler(async(req,res)=>{
     const {channelId}=  req.params;
-    if(!channelId){
+    if(!isValidObjectId(channelId)){
         throw new ApiError(400,"Error occured while finding channel");
     }
-    const exsistedChannel = await User.findById(channelId);
-    if(!exsistedChannel){
-        throw new ApiError(400,"Channel does'nt exsist");
-    }
-
     const subscribers = await Subscription.aggregate([
         {
         $match: {
-            channel: new mongoose.Types.ObjectId(channelId)}
+            channel: new mongoose.Types.ObjectId(channelId)
+        }
         },
         {
             $lookup:{
                 from:"users",
                 localField:"subscriber",
                 foreignField:"_id",
-                as:"subscriber"
-            },
+                as:"subscriber",
             pipeline:[
                 {
                     $project:{
@@ -63,6 +58,7 @@ const getUserChannelSubscribers = asyncHandler(async(req,res)=>{
                     }
                 }
             ]
+        }
         },
         {
             $addFields:{
@@ -76,20 +72,16 @@ const getUserChannelSubscribers = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Some issue occured while fetchcing channel's subscribers");
     }
     if(subscribers.length==0){
-        res.status(200).json( new ResponseApi(200,"channel have zero subscriber"));
+        res.status(200).json( new ResponceApi(200,"channel have zero subscriber"));
     }
     res.status(200)
-       .json( new ResponceApi(200,subscribers[0].subscriber))
+       .json( new ResponceApi(200,"subscriber fetched successfully"))
 })
 
 const getSubscribedChannels = asyncHandler(async(req,res)=>{
     const {subscriberId} = req.params;
-    if(!subscriberId){
+    if(!isValidObjectId(subscriberId)){
         throw new ApiError(400,"invalid subscriber Id");
-    }
-    const ExcistedUser  = await User.findById(subscriberId);
-    if(!ExcistedUser){
-        throw new ApiError(400,"User don't exsist")
     }
     const channels = await Subscription.aggregate([
         {
@@ -128,7 +120,7 @@ const getSubscribedChannels = asyncHandler(async(req,res)=>{
     if(channels.length==0){
         throw new ApiError(400,"user have no subscribers");
     }
-    res.status(200).json(new ResponceApi(200,channels[0].channel,"channel retrieved successfully"));
+    res.status(200).json(new ResponceApi(200,channels.channel,"channel retrieved successfully"));
 })
 
 
