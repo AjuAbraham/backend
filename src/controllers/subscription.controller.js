@@ -26,10 +26,12 @@ const toggleSubscription = asyncHandler(async(req,res)=>{
         if(!check){
             throw new ApiError(400,"Unable to subscribe");
         }
-        res.status(200).json( new ResponceApi(200,{subscribed:true,check},"Subscribed successfully"));
+        res.status(200).json( new ResponceApi(200,{subscribed:true},"Subscribed successfully"));
     }
-    await Subscription.findByIdAndDelete(document?._id);
-    res.status(200).json(new ResponceApi(200,{subscribed:false},"unsubbed successfully"))
+    else{
+    const result = await Subscription.findByIdAndUpdate(document._id,{$unset:{subscriber:1,channel:1}},{new:true});
+    res.status(200).json(new ResponceApi(200,{subscribed:false,result},"unsubbed successfully"))
+    }
 })
 
 
@@ -75,7 +77,7 @@ const getUserChannelSubscribers = asyncHandler(async(req,res)=>{
         res.status(200).json( new ResponceApi(200,"channel have zero subscriber"));
     }
     res.status(200)
-       .json( new ResponceApi(200,"subscriber fetched successfully"))
+       .json( new ResponceApi(200,subscribers,"subscriber fetched successfully"))
 })
 
 const getSubscribedChannels = asyncHandler(async(req,res)=>{
@@ -120,7 +122,7 @@ const getSubscribedChannels = asyncHandler(async(req,res)=>{
     if(channels.length==0){
         throw new ApiError(400,"user have no subscribers");
     }
-    res.status(200).json(new ResponceApi(200,channels.channel,"channel retrieved successfully"));
+    res.status(200).json(new ResponceApi(200,channels,"channel retrieved successfully"));
 })
 
 

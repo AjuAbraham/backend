@@ -75,7 +75,7 @@ const getVideoComments =  asyncHandler(async (req,res)=>{
                 updatedAt:1,
                 owner:1,
                 isLiked:1,
-                likeCount:1
+                likesCount:1
             }
         }
     ]);
@@ -136,7 +136,7 @@ const deleteComment = asyncHandler(async(req,res)=>{
     if(!isValidObjectId(commentId)){
         throw new ApiError(400,"Invalid Comment Id");
     }
-    const commentDelete = await Comment.findByIdAndDelete(commentId);
+    const commentDelete = await Comment.deleteOne({_id:commentId});
     if(!commentDelete){
         throw new ApiError(400,"Unable to delete comment");
     }
